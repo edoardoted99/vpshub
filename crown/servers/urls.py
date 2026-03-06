@@ -8,6 +8,7 @@ urlpatterns = [
     path('servers/<int:pk>/edit/', views.server_edit, name='server_edit'),
     path('servers/<int:pk>/delete/', views.server_delete, name='server_delete'),
     # domains
+    path('domains/add/', views.domain_add_global, name='domain_add_global'),
     path('servers/<int:server_pk>/domains/add/', views.domain_add, name='domain_add'),
     path('servers/<int:server_pk>/domains/recheck/', views.domains_recheck_all, name='domains_recheck_all'),
     path('domains/<int:pk>/delete/', views.domain_delete, name='domain_delete'),

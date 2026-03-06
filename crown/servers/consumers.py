@@ -9,6 +9,20 @@ class AgentConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         self.server_id = None
+        # Capture client IP from the connection
+        self.client_ip = None
+        headers = dict(self.scope.get('headers', []))
+        # Check X-Real-IP / X-Forwarded-For (set by nginx)
+        x_real_ip = headers.get(b'x-real-ip', b'').decode()
+        x_forwarded = headers.get(b'x-forwarded-for', b'').decode()
+        if x_real_ip:
+            self.client_ip = x_real_ip
+        elif x_forwarded:
+            self.client_ip = x_forwarded.split(',')[0].strip()
+        else:
+            client = self.scope.get('client')
+            if client:
+                self.client_ip = client[0]
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -28,7 +42,7 @@ class AgentConsumer(AsyncWebsocketConsumer):
 
     async def handle_enroll(self, data):
         token = data.get('token', '')
-        server = await self.enroll_agent(token)
+        server = await self.enroll_agent(token, self.client_ip)
         if server:
             self.server_id = server.id
             await self.send(text_data=json.dumps({
@@ -53,14 +67,21 @@ class AgentConsumer(AsyncWebsocketConsumer):
             await self.update_last_seen(self.server_id)
 
     @database_sync_to_async
-    def enroll_agent(self, token):
-        from .models import Server
+    def enroll_agent(self, token, client_ip=None):
+        from .models import Server, Domain
         try:
             server = Server.objects.get(enrollment_token=token)
             server.status = Server.Status.ONLINE
             server.enrolled_at = timezone.now()
             server.last_seen = timezone.now()
+            if client_ip:
+                server.ip_address = client_ip
             server.save()
+            # Match unmatched domains to this server by IP
+            if server.ip_address:
+                Domain.objects.filter(
+                    resolved_ip=server.ip_address, server__isnull=True
+                ).update(server=server, status=Domain.Status.MATCHED)
             return server
         except Server.DoesNotExist:
             return None

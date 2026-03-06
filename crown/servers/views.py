@@ -118,16 +118,27 @@ def server_delete(request, pk):
 # --- Domains ---
 
 @login_required
+def domain_add_global(request):
+    """Add a domain from anywhere — auto-resolve and match to server by IP."""
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip().lower()
+        if name:
+            domain, created = Domain.objects.get_or_create(name=name)
+            domain.resolve()
+            if domain.server:
+                return redirect('server_detail', pk=domain.server.pk)
+    return redirect('dashboard')
+
+
+@login_required
 def domain_add(request, server_pk):
-    """Add a domain and auto-resolve it."""
+    """Add a domain from a server's detail page."""
     server = get_object_or_404(Server, pk=server_pk)
     if request.method == 'POST':
         name = request.POST.get('name', '').strip().lower()
         if name:
             domain, created = Domain.objects.get_or_create(name=name)
             domain.resolve()
-            # If resolved IP doesn't match this server but user added it here,
-            # still show it on this server's page (resolve sets server by IP match)
     domains = server.domains.all()
     all_domains_for_ip = Domain.objects.filter(resolved_ip=server.ip_address) if server.ip_address else Domain.objects.none()
     if request.headers.get('HX-Request'):
