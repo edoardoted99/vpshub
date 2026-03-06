@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load server_tags %}
+
+{% block title %}{{ server.name }} - ServerCrown{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'dashboard' %}" class="text-sm text-gray-400 hover:text-crown-400">&larr; Dashboard</a>
+</div>
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+        <span class="status-dot status-{{ server.status }}"></span>
+        <h1 class="text-2xl font-bold">{{ server.name }}</h1>
+        <span class="text-sm text-gray-500">{{ server.get_status_display }}</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="{% url 'server_edit' server.pk %}"
+           class="text-sm text-gray-400 hover:text-crown-400 border border-gray-700 hover:border-crown-500 px-3 py-1 rounded-lg transition">
+            Edit
+        </a>
+        <form method="post" action="{% url 'server_delete' server.pk %}"
+              hx-post="{% url 'server_delete' server.pk %}" hx-confirm="Delete {{ server.name }}?">
+            {% csrf_token %}
+            <button class="text-sm text-red-400 hover:text-red-300 border border-red-800 hover:border-red-600 px-3 py-1 rounded-lg transition">
+                Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <!-- Info -->
+    <div id="server-info" class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        {% include 'servers/partials/server_info.html' %}
+    </div>
+
+    <!-- Metrics (htmx polling) -->
+    <div class="lg:col-span-2" hx-get="{% url 'server_metrics_partial' server.pk %}" hx-trigger="every 10s" hx-swap="innerHTML">
+        {% include 'servers/partials/server_metrics.html' %}
+    </div>
+</div>
+
+<!-- Domains -->
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-gray-300">Domains</h2>
+        <button hx-post="{% url 'domains_recheck_all' server.pk %}"
+                hx-target="#domain-section"
+                hx-swap="innerHTML"
+                class="text-xs text-gray-500 hover:text-crown-400 transition">
+            {% csrf_token %}
+            Recheck all
+        </button>
+    </div>
+
+    <!-- Add domain form -->
+    <form hx-post="{% url 'domain_add' server.pk %}" hx-target="#domain-section" hx-swap="innerHTML" class="flex gap-2 mb-4">
+        {% csrf_token %}
+        <input type="text" name="name" placeholder="example.com" required
+               class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:border-crown-500 focus:outline-none">
+        <button type="submit"
+                class="bg-crown-500 hover:bg-crown-600 text-gray-900 font-medium px-4 py-2 rounded-lg text-sm transition">
+            Add
+        </button>
+    </form>
+
+    <div id="domain-section">
+        {% include 'servers/partials/domain_list.html' with matched_domains=domains %}
+    </div>
+</div>
+
+<!-- Notes -->
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+    <h2 class="font-semibold text-gray-300 mb-3">Notes</h2>
+    {% if server.notes %}
+    <p class="text-sm text-gray-400 whitespace-pre-wrap">{{ server.notes }}</p>
+    {% else %}
+    <p class="text-sm text-gray-600">No notes yet. <a href="{% url 'server_edit' server.pk %}" class="text-crown-400 hover:text-crown-300">Add some</a>.</p>
+    {% endif %}
+</div>
+
+<!-- Enrollment token (if pending) -->
+{% if server.status == 'pending' %}
+<div class="bg-gray-900 border border-yellow-800 rounded-xl p-5">
+    <h3 class="text-yellow-400 font-semibold mb-2">Waiting for agent enrollment</h3>
+    <p class="text-sm text-gray-400 mb-3">Set this token on the agent:</p>
+    <div class="flex items-center gap-2">
+        <code id="token-value" class="flex-1 bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-crown-400 select-all overflow-x-auto">{{ server.enrollment_token }}</code>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('token-value').textContent)"
+                class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm px-3 py-2 rounded-lg transition shrink-0">
+            Copy
+        </button>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

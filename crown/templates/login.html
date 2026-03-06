@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ServerCrown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        crown: {
+                            400: '#e4b520',
+                            500: '#d4a017',
+                            600: '#a67c12',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-sm">
+        <div class="text-center mb-8">
+            <span class="text-4xl">👑</span>
+            <h1 class="text-2xl font-bold text-crown-400 mt-2">ServerCrown</h1>
+        </div>
+
+        <form method="post" class="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="bg-red-900/30 border border-red-700 text-red-300 px-4 py-2 rounded-lg text-sm">
+                Invalid username or password.
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="id_username" class="block text-sm font-medium text-gray-400 mb-1">Username</label>
+                <input type="text" name="username" id="id_username" autofocus
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-crown-500">
+            </div>
+
+            <div>
+                <label for="id_password" class="block text-sm font-medium text-gray-400 mb-1">Password</label>
+                <input type="password" name="password" id="id_password"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-crown-500">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-crown-500 hover:bg-crown-600 text-gray-900 font-medium py-2 rounded-lg transition">
+                Sign in
+            </button>
+        </form>
+    </div>
+</body>
+</html>

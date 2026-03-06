@@ -1,0 +1,7 @@
+<div class="bg-gray-900 border border-green-800 rounded-xl p-5">
+    <h3 class="text-green-400 font-semibold mb-2">Server created!</h3>
+    <p class="text-sm text-gray-400 mb-3">Run this on your target server to install the agent:</p>
+    <pre class="bg-gray-950 border border-gray-800 rounded-lg p-3 text-sm text-crown-400 overflow-x-auto">curl -sSL https://your-crown/install.sh | bash -s -- --token {{ server.enrollment_token }}</pre>
+    <div class="mt-3 text-xs text-gray-500">Token: <code>{{ server.enrollment_token }}</code></div>
+    <a href="{% url 'dashboard' %}" class="inline-block mt-4 text-sm text-crown-400 hover:text-crown-300">← Back to dashboard</a>
+</div>

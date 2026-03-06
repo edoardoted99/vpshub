@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load server_tags %}
+
+{% block title %}Dashboard - ServerCrown{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="text-sm text-gray-400">Total</div>
+        <div class="text-2xl font-bold text-gray-100">{{ total_count }}</div>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="text-sm text-gray-400">Online</div>
+        <div class="text-2xl font-bold text-green-400">{{ online_count }}</div>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="text-sm text-gray-400">Offline</div>
+        <div class="text-2xl font-bold text-red-400">{{ offline_count }}</div>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="text-sm text-gray-400">Pending</div>
+        <div class="text-2xl font-bold text-yellow-400">{{ pending_count }}</div>
+    </div>
+</div>
+
+<!-- Server List -->
+<div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div hx-get="{% url 'server_list_partial' %}" hx-trigger="every 10s" hx-swap="innerHTML">
+        {% include 'servers/partials/server_list.html' %}
+    </div>
+</div>
+{% endblock %}

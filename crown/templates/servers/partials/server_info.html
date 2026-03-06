@@ -1,0 +1,50 @@
+<h2 class="font-semibold text-gray-300 mb-3">Info</h2>
+<div class="space-y-2">
+    {% if server.ip_address %}
+    <div class="flex justify-between text-sm">
+        <span class="text-gray-500">IP</span>
+        <span>{{ server.ip_address }}</span>
+    </div>
+    {% endif %}
+    {% if server.hostname %}
+    <div class="flex justify-between text-sm">
+        <span class="text-gray-500">Hostname</span>
+        <span>{{ server.hostname }}</span>
+    </div>
+    {% endif %}
+    {% if server.os_info %}
+    <div class="flex justify-between text-sm">
+        <span class="text-gray-500">OS</span>
+        <span>{{ server.os_info }}</span>
+    </div>
+    {% endif %}
+    {% if server.agent_version %}
+    <div class="flex justify-between text-sm">
+        <span class="text-gray-500">Agent</span>
+        <span>{{ server.agent_version }}</span>
+    </div>
+    {% endif %}
+    {% if server.last_seen %}
+    <div class="flex justify-between text-sm">
+        <span class="text-gray-500">Last seen</span>
+        <span>{{ server.last_seen|timesince }} ago</span>
+    </div>
+    {% endif %}
+    {% if server.enrolled_at %}
+    <div class="flex justify-between text-sm">
+        <span class="text-gray-500">Enrolled</span>
+        <span>{{ server.enrolled_at|date:"M d, Y H:i" }}</span>
+    </div>
+    {% endif %}
+    <div class="flex justify-between text-sm">
+        <span class="text-gray-500">Created</span>
+        <span>{{ server.created_at|date:"M d, Y H:i" }}</span>
+    </div>
+    {% if server.get_tags_list %}
+    <div class="flex flex-wrap gap-1 pt-2 border-t border-gray-800 mt-2">
+        {% for tag in server.get_tags_list %}
+        <span class="bg-gray-800 text-gray-300 text-xs px-2 py-0.5 rounded">{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>

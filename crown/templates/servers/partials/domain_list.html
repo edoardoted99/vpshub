@@ -1,0 +1,39 @@
+<div class="space-y-2">
+    {% for domain in matched_domains %}
+    <div class="flex items-center justify-between bg-gray-800/50 rounded-lg px-3 py-2">
+        <div class="flex items-center gap-2 min-w-0">
+            {% if domain.status == 'matched' %}
+            <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
+            {% elif domain.status == 'unmatched' %}
+            <span class="w-2 h-2 rounded-full bg-yellow-500 shrink-0"></span>
+            {% else %}
+            <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+            {% endif %}
+            <span class="text-sm text-gray-200 truncate">{{ domain.name }}</span>
+            <span class="text-xs text-gray-500">{{ domain.resolved_ip|default:"no IP" }}</span>
+            {% if domain.last_checked %}
+            <span class="text-xs text-gray-600 hidden lg:inline">checked {{ domain.last_checked|timesince }} ago</span>
+            {% endif %}
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+            <button hx-post="{% url 'domain_recheck' domain.pk %}"
+                    hx-target="#domain-section"
+                    hx-swap="innerHTML"
+                    class="text-xs text-gray-500 hover:text-crown-400 px-2 py-1 transition">
+                {% csrf_token %}
+                Recheck
+            </button>
+            <button hx-post="{% url 'domain_delete' domain.pk %}"
+                    hx-target="#domain-section"
+                    hx-swap="innerHTML"
+                    hx-confirm="Remove {{ domain.name }}?"
+                    class="text-xs text-red-500 hover:text-red-400 px-2 py-1 transition">
+                {% csrf_token %}
+                Remove
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-sm text-gray-600">No domains linked to this server yet.</p>
+    {% endfor %}
+</div>

@@ -1,0 +1,77 @@
+{% load server_tags %}
+{% if servers %}
+<table class="w-full text-sm">
+    <thead>
+        <tr class="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-gray-800">
+            <th class="px-4 py-3 w-8"></th>
+            <th class="px-4 py-3">Server</th>
+            <th class="px-4 py-3 hidden md:table-cell">IP</th>
+            <th class="px-4 py-3">CPU</th>
+            <th class="px-4 py-3">RAM</th>
+            <th class="px-4 py-3 hidden lg:table-cell">Disk</th>
+            <th class="px-4 py-3 hidden lg:table-cell">Uptime</th>
+            <th class="px-4 py-3 hidden md:table-cell">Last seen</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for server in servers %}
+        <tr class="border-b border-gray-800/50 hover:bg-gray-800/30 cursor-pointer transition"
+            onclick="window.location='{% url 'server_detail' server.pk %}'">
+            <td class="px-4 py-3">
+                <span class="status-dot status-{{ server.status }}"></span>
+            </td>
+            <td class="px-4 py-3">
+                <div class="font-medium text-gray-100">{{ server.name }}</div>
+                {% if server.get_tags_list %}
+                <div class="flex flex-wrap gap-1 mt-1">
+                    {% for tag in server.get_tags_list %}
+                    <span class="bg-gray-800 text-gray-400 text-xs px-1.5 py-0.5 rounded">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </td>
+            <td class="px-4 py-3 text-gray-400 hidden md:table-cell">{{ server.ip_address|default:"-" }}</td>
+            <td class="px-4 py-3">
+                {% if server.latest_cpu is not None %}
+                <div class="flex items-center gap-2">
+                    <div class="w-16 bg-gray-800 rounded-full h-1.5">
+                        <div class="h-1.5 rounded-full {{ server.latest_cpu|bar_color:'cpu' }}" style="width: {{ server.latest_cpu }}%"></div>
+                    </div>
+                    <span class="text-gray-400 text-xs w-10">{{ server.latest_cpu|floatformat:0 }}%</span>
+                </div>
+                {% else %}<span class="text-gray-600">-</span>{% endif %}
+            </td>
+            <td class="px-4 py-3">
+                {% if server.latest_mem is not None %}
+                <div class="flex items-center gap-2">
+                    <div class="w-16 bg-gray-800 rounded-full h-1.5">
+                        <div class="h-1.5 rounded-full {{ server.latest_mem|bar_color:'mem' }}" style="width: {{ server.latest_mem }}%"></div>
+                    </div>
+                    <span class="text-gray-400 text-xs w-10">{{ server.latest_mem|floatformat:0 }}%</span>
+                </div>
+                {% else %}<span class="text-gray-600">-</span>{% endif %}
+            </td>
+            <td class="px-4 py-3 hidden lg:table-cell">
+                {% if server.latest_disk is not None %}
+                <div class="flex items-center gap-2">
+                    <div class="w-16 bg-gray-800 rounded-full h-1.5">
+                        <div class="h-1.5 rounded-full {{ server.latest_disk|bar_color:'disk' }}" style="width: {{ server.latest_disk }}%"></div>
+                    </div>
+                    <span class="text-gray-400 text-xs w-10">{{ server.latest_disk|floatformat:0 }}%</span>
+                </div>
+                {% else %}<span class="text-gray-600">-</span>{% endif %}
+            </td>
+            <td class="px-4 py-3 text-gray-400 hidden lg:table-cell">{{ server.latest_uptime|uptime_fmt }}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">
+                {% if server.last_seen %}{{ server.last_seen|timesince }} ago{% else %}-{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="text-center py-16 text-gray-500">
+    <p class="text-lg mb-2">No servers yet</p>
+    <p class="text-sm">Add your first server to get started.</p>
+</div>
+{% endif %}

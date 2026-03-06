@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ServerCrown{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        crown: {
+                            50: '#fdf8e8',
+                            100: '#faefc5',
+                            200: '#f5df8e',
+                            300: '#edc94d',
+                            400: '#e4b520',
+                            500: '#d4a017',
+                            600: '#a67c12',
+                            700: '#7a5b11',
+                            800: '#524013',
+                            900: '#2d2310',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-online { background-color: #22c55e; box-shadow: 0 0 6px #22c55e; }
+        .status-offline { background-color: #ef4444; box-shadow: 0 0 6px #ef4444; }
+        .status-pending { background-color: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+    <nav class="border-b border-gray-800 bg-gray-900/50 backdrop-blur">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-2 text-lg font-bold text-crown-400">
+                <span>👑</span>
+                <span>ServerCrown</span>
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="{% url 'server_add' %}" class="bg-crown-500 hover:bg-crown-600 text-gray-900 font-medium px-4 py-2 rounded-lg text-sm transition">
+                    + Add Server
+                </a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-gray-400 hover:text-gray-200 text-sm transition">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

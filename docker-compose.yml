@@ -1,0 +1,40 @@
+services:
+  crown:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.crown
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./crown:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  target:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.target
+    volumes:
+      - ./agent:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CROWN_SERVER_URL=ws://crown:8000/ws/agent/
+      - CROWN_TOKEN=${CROWN_TOKEN:-changeme}
+      - CROWN_INTERVAL=10
+    depends_on:
+      - crown
+
+  target2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.target
+    volumes:
+      - ./agent:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CROWN_SERVER_URL=ws://crown:8001/ws/agent/
+      - CROWN_TOKEN=${CROWN_TOKEN:-changeme}
+      - CROWN_INTERVAL=10
+    depends_on:
+      - crown
+

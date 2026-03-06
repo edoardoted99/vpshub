@@ -1,0 +1,59 @@
+{% load server_tags %}
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <h2 class="font-semibold text-gray-300 mb-4">Metrics</h2>
+    {% if metric %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- CPU -->
+        <div>
+            <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-500">CPU</span>
+                <span class="font-medium">{{ metric.cpu_percent|floatformat:1 }}%</span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-3">
+                <div class="h-3 rounded-full transition-all {{ metric.cpu_percent|bar_color:'cpu' }}"
+                     style="width: {{ metric.cpu_percent }}%"></div>
+            </div>
+        </div>
+        <!-- Memory -->
+        <div>
+            <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-500">Memory</span>
+                <span class="font-medium">{{ metric.memory_percent|floatformat:1 }}%</span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-3">
+                <div class="h-3 rounded-full transition-all {{ metric.memory_percent|bar_color:'mem' }}"
+                     style="width: {{ metric.memory_percent }}%"></div>
+            </div>
+            <div class="text-xs text-gray-500 mt-1">{{ metric.memory_used_mb|floatformat:0 }} / {{ metric.memory_total_mb|floatformat:0 }} MB</div>
+        </div>
+        <!-- Disk -->
+        <div>
+            <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-500">Disk</span>
+                <span class="font-medium">{{ metric.disk_percent|floatformat:1 }}%</span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-3">
+                <div class="h-3 rounded-full transition-all {{ metric.disk_percent|bar_color:'disk' }}"
+                     style="width: {{ metric.disk_percent }}%"></div>
+            </div>
+            <div class="text-xs text-gray-500 mt-1">{{ metric.disk_used_gb|floatformat:1 }} / {{ metric.disk_total_gb|floatformat:1 }} GB</div>
+        </div>
+    </div>
+
+    <!-- Load & Uptime -->
+    <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-800">
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Load (1/5/15m)</span>
+            <span>{{ metric.load_1m|floatformat:2 }} / {{ metric.load_5m|floatformat:2 }} / {{ metric.load_15m|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Uptime</span>
+            <span>{{ metric.uptime_seconds|uptime_fmt }}</span>
+        </div>
+    </div>
+
+    <div class="text-xs text-gray-600 mt-3">Updated {{ metric.timestamp|timesince }} ago</div>
+    {% else %}
+    <p class="text-sm text-gray-500">No metrics received yet.</p>
+    {% endif %}
+</div>
