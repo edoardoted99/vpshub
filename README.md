@@ -1,8 +1,21 @@
-# server👑crown 
+# server👑crown
 
 A self-hosted control plane for managing all your servers from a single dashboard.
 
-ServerCrown uses an **agent-based architecture**: install a lightweight agent on each server, and manage everything from a central web hub — real-time metrics, web terminal, command execution, and alerts.
+Install a lightweight agent on each server with a single command — real-time metrics, domain tracking, and server management from one place.
+
+**Live demo:** [servercrown.it](https://servercrown.it)
+
+## Screenshots
+
+### Dashboard
+![Dashboard](docs/dashboard.png)
+
+### Server Detail
+![Server Detail](docs/server_detail.png)
+
+### Login
+![Login](docs/login.png)
 
 ## How It Works
 
@@ -21,68 +34,81 @@ ServerCrown uses an **agent-based architecture**: install a lightweight agent on
         └───────────┘ └───────────┘ └───────────┘
 ```
 
-- The **agent** is a single binary that runs on each target server. It collects system metrics, sends heartbeats, and executes commands received from the hub.
-- The **hub** is a web app where you see all your servers, their health, and interact with them.
+The **agent** runs on each target server — it collects system metrics and sends them to the crown via WebSocket. The **crown** is a web app where you see all your servers and their health.
 
-The agent connects **outbound** to the hub — no inbound ports needed on your servers.
-
-## Features
-
-- **Real-time dashboard** — live CPU, RAM, disk, and network metrics from all servers
-- **Web terminal** — full interactive shell in the browser, no SSH client needed
-- **Command execution** — run commands on one or many servers at once
-- **Saved snippets** — predefined commands for common operations
-- **Alerts** — get notified when a server goes down or resources hit thresholds
-- **Agent enrollment** — add a server with a single command
-- **Self-hosted** — your data stays on your infrastructure
+Agents connect **outbound** to the crown — no inbound ports needed on your servers.
 
 ## Quick Start
 
-### 1. Deploy the Hub
+### 1. Deploy the Crown
 
 ```bash
+git clone https://github.com/edoardoted99/servercrown.git
+cd servercrown
 docker compose up -d
+```
+
+Create a superuser:
+```bash
+docker compose exec crown python manage.py createsuperuser
 ```
 
 ### 2. Add a Server
 
-Open the hub UI, create a new server, and copy the enrollment command:
+Open the dashboard, click **+ Add Server**, and copy the install command:
 
 ```bash
-curl -sSL https://your-hub/install.sh | bash -s -- --token <enrollment-token>
+curl -sSL https://your-crown/install/<token> | bash
 ```
 
-The agent installs itself, connects to the hub, and your server appears on the dashboard.
+The agent installs itself as a systemd service, connects to the crown, and your server appears on the dashboard with live metrics.
+
+## Features
+
+- **Real-time dashboard** — live CPU, RAM, disk metrics with progress bars
+- **Agent enrollment** — one-command install on any Linux server
+- **Domain tracking** — add a domain, DNS resolves and auto-matches to the right server
+- **Server management** — edit name, tags, notes per server
+- **WebSocket-based** — agents maintain a persistent connection, instant updates
+- **HTMX frontend** — lightweight, reactive UI with no JS framework
+- **Self-hosted** — your data stays on your infrastructure
 
 ## Architecture
 
 | Component | Tech | Role |
 |-----------|------|------|
-| Agent | Go | Metrics collection, command execution, PTY proxy |
-| Hub Backend | Django + Django Channels | Views, WebSocket server, agent management |
-| Hub Frontend | htmx + Tailwind | Reactive server-rendered UI, dashboard, administration |
-| Database | SQLite / PostgreSQL | Server registry, metrics, configuration |
-| Terminal | xterm.js | Browser-based interactive shell (only JS dependency) |
+| Agent | Python (psutil + websockets) | Metrics collection, heartbeat |
+| Crown Backend | Django + Daphne + Channels | WebSocket server, views, agent management |
+| Crown Frontend | htmx + Tailwind CSS | Reactive server-rendered UI |
+| Database | SQLite | Server registry, metrics, domains |
 
-## Security
+## Project Structure
 
-- Agents authenticate with the hub via API keys issued during enrollment.
-- All communication is encrypted over WebSocket + TLS.
-- The agent runs as an unprivileged user; sudo escalation is opt-in.
-- No SSH keys are stored on the hub — the agent model eliminates that need.
-- All executed commands are logged for audit.
-
-See [WHITEPAPER.md](WHITEPAPER.md) for the full technical design.
+```
+servercrown/
+├── crown/                  # Django project
+│   ├── crown/              # Django settings, urls, asgi
+│   ├── servers/            # Main app (models, views, consumers)
+│   └── templates/          # HTML templates
+├── agent/                  # Agent script
+│   └── agent.py            # Standalone agent
+├── docker/                 # Dockerfiles
+└── docker-compose.yml      # Dev environment
+```
 
 ## Roadmap
 
-- [x] Project design and whitepaper
-- [ ] Agent: heartbeat + metrics + WebSocket connection
-- [ ] Hub: server registry + enrollment + dashboard
+- [x] Agent: heartbeat + metrics + WebSocket connection
+- [x] Crown: server registry + enrollment + dashboard
+- [x] One-command agent install script
+- [x] Domain tracking with DNS auto-resolution
+- [x] Docker dev environment
+- [x] Production deployment with SSL
 - [ ] Web terminal
 - [ ] Multi-server command execution
 - [ ] Alert engine + notifications
 - [ ] Agent auto-update
+- [ ] Multi-user support
 
 ## License
 
