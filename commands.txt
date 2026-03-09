@@ -1,0 +1,3 @@
+systemctl status servercrown    # stato app
+systemctl restart servercrown   # restart app
+journalctl -u servercrown -f

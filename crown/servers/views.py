@@ -69,10 +69,6 @@ def server_add(request):
             ip_address=request.POST.get('ip_address') or None,
             tags=request.POST.get('tags', ''),
             notes=request.POST.get('notes', ''),
-            ssh_host=request.POST.get('ssh_host', ''),
-            ssh_port=int(request.POST.get('ssh_port') or 22),
-            ssh_user=request.POST.get('ssh_user', ''),
-            ssh_password=request.POST.get('ssh_password', ''),
         )
         if request.headers.get('HX-Request'):
             return render(request, 'servers/partials/enrollment_token.html', {'server': server})
@@ -102,10 +98,6 @@ def server_edit(request, pk):
         server.name = request.POST.get('name', server.name)
         server.tags = request.POST.get('tags', server.tags)
         server.notes = request.POST.get('notes', server.notes)
-        server.ssh_host = request.POST.get('ssh_host', server.ssh_host)
-        server.ssh_port = int(request.POST.get('ssh_port') or server.ssh_port)
-        server.ssh_user = request.POST.get('ssh_user', server.ssh_user)
-        server.ssh_password = request.POST.get('ssh_password', server.ssh_password)
         server.save()
         if request.headers.get('HX-Request'):
             return render(request, 'servers/partials/server_info.html', {'server': server})

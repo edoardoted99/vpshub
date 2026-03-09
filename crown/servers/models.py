@@ -23,12 +23,6 @@ class Server(models.Model):
     api_key_hash = models.CharField(max_length=128, blank=True)
     enrolled_at = models.DateTimeField(null=True, blank=True)
 
-    # SSH pull mode (for servers that can't connect outbound)
-    ssh_host = models.CharField(max_length=255, blank=True, help_text='e.g. openport.io')
-    ssh_port = models.IntegerField(default=22, blank=True)
-    ssh_user = models.CharField(max_length=100, blank=True)
-    ssh_password = models.CharField(max_length=255, blank=True)
-
     # Agent info (reported by agent on connect)
     os_info = models.CharField(max_length=255, blank=True)
     agent_version = models.CharField(max_length=32, blank=True)
