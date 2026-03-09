@@ -37,9 +37,22 @@ def collect_metrics():
         'uptime_seconds': uptime,
     }
 
+_ssl_ctx = None
+def _get_ssl_ctx():
+    global _ssl_ctx
+    if _ssl_ctx is None:
+        import ssl
+        if os.environ.get('CROWN_SSL_VERIFY', '1') == '0':
+            _ssl_ctx = ssl.create_default_context()
+            _ssl_ctx.check_hostname = False
+            _ssl_ctx.verify_mode = ssl.CERT_NONE
+        else:
+            _ssl_ctx = ssl.create_default_context()
+    return _ssl_ctx
+
 def _post_json(url, data):
     req = urllib.request.Request(url, data=json.dumps(data).encode(), headers={'Content-Type':'application/json'})
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=30, context=_get_ssl_ctx()) as resp:
         return json.loads(resp.read())
 
 def run_agent_http(server_url, token, interval=10):
@@ -106,7 +119,8 @@ AGENT_SCRIPT
 cat > "$INSTALL_DIR/run.sh" <<RUNEOF
 #!/usr/bin/env bash
 set -euo pipefail
-export CROWN_SERVER_URL="https://servercrown.org/api/agent"
+export CROWN_SERVER_URL="https://212.227.86.15/api/agent"
+export CROWN_SSL_VERIFY="0"
 export CROWN_TOKEN="$TOKEN"
 export CROWN_INTERVAL="10"
 exec "$INSTALL_DIR/venv/bin/python" "$INSTALL_DIR/agent.py"

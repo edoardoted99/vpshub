@@ -68,6 +68,20 @@ async def run_agent(server_url, token, interval=10):
             await asyncio.sleep(5)
 
 
+_ssl_ctx = None
+
+def _get_ssl_ctx():
+    global _ssl_ctx
+    if _ssl_ctx is None:
+        import ssl
+        if os.environ.get('CROWN_SSL_VERIFY', '1') == '0':
+            _ssl_ctx = ssl.create_default_context()
+            _ssl_ctx.check_hostname = False
+            _ssl_ctx.verify_mode = ssl.CERT_NONE
+        else:
+            _ssl_ctx = ssl.create_default_context()
+    return _ssl_ctx
+
 def _post_json(url, data):
     """POST JSON data and return parsed response."""
     req = urllib.request.Request(
@@ -75,7 +89,7 @@ def _post_json(url, data):
         data=json.dumps(data).encode(),
         headers={'Content-Type': 'application/json'},
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=30, context=_get_ssl_ctx()) as resp:
         return json.loads(resp.read())
 
 
