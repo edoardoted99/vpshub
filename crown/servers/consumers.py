@@ -1,7 +1,116 @@
+import asyncio
 import json
+
+import asyncssh
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.utils import timezone
+
+
+class SSHConsumer(AsyncWebsocketConsumer):
+    """WebSocket consumer that proxies an SSH connection to a server."""
+
+    async def connect(self):
+        self.ssh_conn = None
+        self.ssh_process = None
+
+        # Check user is authenticated
+        user = self.scope.get('user')
+        if not user or not user.is_authenticated:
+            await self.close()
+            return
+
+        self.server_id = self.scope['url_route']['kwargs']['server_id']
+        server_data = await self.get_server_ssh_info(self.server_id)
+        if not server_data:
+            await self.accept()
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': 'Server not found or SSH not configured',
+            }))
+            await self.close()
+            return
+
+        self.server_data = server_data
+        await self.accept()
+
+        # Start SSH connection in background
+        asyncio.ensure_future(self.start_ssh())
+
+    async def start_ssh(self):
+        try:
+            self.ssh_conn = await asyncssh.connect(
+                self.server_data['host'],
+                port=self.server_data['port'],
+                username=self.server_data['user'],
+                password=self.server_data['password'],
+                known_hosts=None,
+            )
+            self.ssh_process = await self.ssh_conn.create_process(
+                term_type='xterm-256color',
+                term_size=(80, 24),
+            )
+            # Read SSH output and forward to WebSocket
+            asyncio.ensure_future(self.read_ssh_output())
+        except asyncssh.Error as e:
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': f'SSH connection failed: {e}',
+            }))
+            await self.close()
+        except OSError as e:
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': f'Connection failed: {e}',
+            }))
+            await self.close()
+
+    async def read_ssh_output(self):
+        try:
+            while self.ssh_process and not self.ssh_process.stdout.at_eof():
+                data = await self.ssh_process.stdout.read(4096)
+                if data:
+                    await self.send(text_data=json.dumps({
+                        'type': 'output',
+                        'data': data,
+                    }))
+        except (asyncssh.Error, ConnectionError):
+            pass
+        finally:
+            await self.close()
+
+    async def disconnect(self, close_code):
+        if self.ssh_process:
+            self.ssh_process.close()
+        if self.ssh_conn:
+            self.ssh_conn.close()
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        msg_type = data.get('type')
+
+        if msg_type == 'input' and self.ssh_process:
+            self.ssh_process.stdin.write(data.get('data', ''))
+        elif msg_type == 'resize' and self.ssh_process:
+            cols = data.get('cols', 80)
+            rows = data.get('rows', 24)
+            self.ssh_process.change_terminal_size(cols, rows)
+
+    @database_sync_to_async
+    def get_server_ssh_info(self, server_id):
+        from .models import Server
+        try:
+            server = Server.objects.get(pk=server_id)
+            if not server.ssh_user or not server.ip_address:
+                return None
+            return {
+                'host': server.ip_address,
+                'port': server.ssh_port,
+                'user': server.ssh_user,
+                'password': server.ssh_password,
+            }
+        except Server.DoesNotExist:
+            return None
 
 
 class AgentConsumer(AsyncWebsocketConsumer):

@@ -71,14 +71,41 @@
     </div>
 </div>
 
+<!-- SSH Terminal -->
+{% if server.ssh_user and server.ip_address %}
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="font-semibold text-gray-300">SSH Terminal</h2>
+            <p class="text-xs text-gray-500 mt-1">{{ server.ssh_user }}@{{ server.ip_address }}:{{ server.ssh_port }}</p>
+        </div>
+        <a href="{% url 'ssh_terminal' server.pk %}"
+           class="bg-gray-800 hover:bg-gray-700 text-crown-400 hover:text-crown-300 border border-gray-700 hover:border-crown-500 font-medium px-4 py-2 rounded-lg text-sm transition">
+            Open Terminal
+        </a>
+    </div>
+</div>
+{% elif not server.ssh_user %}
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="font-semibold text-gray-300">SSH Terminal</h2>
+            <p class="text-xs text-gray-500 mt-1">Configure SSH credentials to enable terminal access</p>
+        </div>
+        <a href="{% url 'server_edit' server.pk %}"
+           class="text-sm text-gray-400 hover:text-crown-400 border border-gray-700 hover:border-crown-500 px-3 py-1 rounded-lg transition">
+            Configure SSH
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <!-- Notes -->
 <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
-    <h2 class="font-semibold text-gray-300 mb-3">Notes</h2>
-    {% if server.notes %}
-    <p class="text-sm text-gray-400 whitespace-pre-wrap">{{ server.notes }}</p>
-    {% else %}
-    <p class="text-sm text-gray-600">No notes yet. <a href="{% url 'server_edit' server.pk %}" class="text-crown-400 hover:text-crown-300">Add some</a>.</p>
-    {% endif %}
+    <h2 class="font-semibold text-gray-300 mb-4">Notes</h2>
+    <div id="notes-section">
+        {% include 'servers/partials/notes_list.html' %}
+    </div>
 </div>
 
 <!-- Enrollment (if pending) -->

@@ -23,6 +23,11 @@ class Server(models.Model):
     api_key_hash = models.CharField(max_length=128, blank=True)
     enrolled_at = models.DateTimeField(null=True, blank=True)
 
+    # SSH access
+    ssh_user = models.CharField(max_length=128, blank=True)
+    ssh_password = models.CharField(max_length=255, blank=True)
+    ssh_port = models.PositiveIntegerField(default=22)
+
     # Agent info (reported by agent on connect)
     os_info = models.CharField(max_length=255, blank=True)
     agent_version = models.CharField(max_length=32, blank=True)
@@ -41,6 +46,18 @@ class Server(models.Model):
 
     class Meta:
         ordering = ['name']
+
+
+class ServerNote(models.Model):
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='server_notes')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Note on {self.server.name} ({self.created_at:%Y-%m-%d})"
 
 
 class Metric(models.Model):

@@ -8,7 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Server, Metric, Domain
+from .models import Server, Metric, Domain, ServerNote
 
 AGENT_PY = (Path(__file__).resolve().parent.parent.parent / 'agent' / 'agent.py').read_text()
 
@@ -82,11 +82,13 @@ def server_detail(request, pk):
     latest_metric = server.metrics.first()
     recent_metrics = server.metrics.all()[:60]
     domains = server.domains.all()
+    notes = server.server_notes.all()
     context = {
         'server': server,
         'metric': latest_metric,
         'recent_metrics': recent_metrics,
         'domains': domains,
+        'notes': notes,
     }
     return render(request, 'servers/server_detail.html', context)
 
@@ -98,6 +100,11 @@ def server_edit(request, pk):
         server.name = request.POST.get('name', server.name)
         server.tags = request.POST.get('tags', server.tags)
         server.notes = request.POST.get('notes', server.notes)
+        server.ssh_user = request.POST.get('ssh_user', server.ssh_user)
+        server.ssh_password = request.POST.get('ssh_password', server.ssh_password)
+        ssh_port = request.POST.get('ssh_port', '')
+        if ssh_port.isdigit():
+            server.ssh_port = int(ssh_port)
         server.save()
         if request.headers.get('HX-Request'):
             return render(request, 'servers/partials/server_info.html', {'server': server})
@@ -125,6 +132,41 @@ def server_delete(request, pk):
             return HttpResponse(status=200, headers={'HX-Redirect': '/'})
         return redirect('dashboard')
     return render(request, 'servers/server_delete.html', {'server': server})
+
+
+# --- Notes ---
+
+@login_required
+def note_add(request, pk):
+    server = get_object_or_404(Server, pk=pk)
+    if request.method == 'POST':
+        text = request.POST.get('text', '').strip()
+        if text:
+            ServerNote.objects.create(server=server, text=text)
+    notes = server.server_notes.all()
+    if request.headers.get('HX-Request'):
+        return render(request, 'servers/partials/notes_list.html', {'server': server, 'notes': notes})
+    return redirect('server_detail', pk=pk)
+
+
+@login_required
+def note_delete(request, pk):
+    note = get_object_or_404(ServerNote, pk=pk)
+    server = note.server
+    if request.method == 'POST':
+        note.delete()
+    notes = server.server_notes.all()
+    if request.headers.get('HX-Request'):
+        return render(request, 'servers/partials/notes_list.html', {'server': server, 'notes': notes})
+    return redirect('server_detail', pk=server.pk)
+
+
+# --- SSH Terminal ---
+
+@login_required
+def ssh_terminal(request, pk):
+    server = get_object_or_404(Server, pk=pk)
+    return render(request, 'servers/ssh_terminal.html', {'server': server})
 
 
 # --- Agent HTTP API (fallback for networks that block WebSocket) ---

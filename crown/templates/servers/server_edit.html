@@ -32,6 +32,31 @@
                       class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:border-crown-500 focus:outline-none">{{ server.notes }}</textarea>
         </div>
 
+        <!-- SSH -->
+        <div class="border-t border-gray-800 pt-4 mt-2">
+            <h3 class="text-sm font-semibold text-gray-400 mb-3">SSH Access</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">SSH User</label>
+                    <input type="text" name="ssh_user" value="{{ server.ssh_user }}"
+                           class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:border-crown-500 focus:outline-none"
+                           placeholder="root">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">SSH Port</label>
+                    <input type="number" name="ssh_port" value="{{ server.ssh_port }}"
+                           class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:border-crown-500 focus:outline-none"
+                           placeholder="22">
+                </div>
+            </div>
+            <div class="mt-3">
+                <label class="block text-sm text-gray-400 mb-1">SSH Password</label>
+                <input type="password" name="ssh_password" value="{{ server.ssh_password }}"
+                       class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:border-crown-500 focus:outline-none"
+                       placeholder="Leave empty to keep current">
+            </div>
+        </div>
+
         <div class="flex gap-3">
             <button type="submit"
                     class="bg-crown-500 hover:bg-crown-600 text-gray-900 font-medium px-6 py-2 rounded-lg transition">

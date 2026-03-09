@@ -8,6 +8,10 @@ urlpatterns = [
     path('servers/<int:pk>/', views.server_detail, name='server_detail'),
     path('servers/<int:pk>/edit/', views.server_edit, name='server_edit'),
     path('servers/<int:pk>/delete/', views.server_delete, name='server_delete'),
+    path('servers/<int:pk>/terminal/', views.ssh_terminal, name='ssh_terminal'),
+    # notes
+    path('servers/<int:pk>/notes/add/', views.note_add, name='note_add'),
+    path('notes/<int:pk>/delete/', views.note_delete, name='note_delete'),
     path('install/<str:token>', views.install_script, name='install_script'),
     # Agent HTTP API (fallback for networks that block WebSocket)
     path('api/agent/enroll/', views.api_agent_enroll, name='api_agent_enroll'),
