@@ -161,6 +161,21 @@ def note_delete(request, pk):
     return redirect('server_detail', pk=server.pk)
 
 
+@login_required
+def server_ssh_update(request, pk):
+    server = get_object_or_404(Server, pk=pk)
+    if request.method == 'POST':
+        server.ssh_user = request.POST.get('ssh_user', server.ssh_user)
+        server.ssh_password = request.POST.get('ssh_password', server.ssh_password)
+        ssh_port = request.POST.get('ssh_port', '')
+        if ssh_port.isdigit():
+            server.ssh_port = int(ssh_port)
+        server.save(update_fields=['ssh_user', 'ssh_password', 'ssh_port'])
+    if request.headers.get('HX-Request'):
+        return render(request, 'servers/partials/ssh_section.html', {'server': server})
+    return redirect('server_detail', pk=pk)
+
+
 # --- SSH Terminal ---
 
 @login_required

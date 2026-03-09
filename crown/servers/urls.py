@@ -9,6 +9,7 @@ urlpatterns = [
     path('servers/<int:pk>/edit/', views.server_edit, name='server_edit'),
     path('servers/<int:pk>/delete/', views.server_delete, name='server_delete'),
     path('servers/<int:pk>/terminal/', views.ssh_terminal, name='ssh_terminal'),
+    path('servers/<int:pk>/ssh/', views.server_ssh_update, name='server_ssh_update'),
     # notes
     path('servers/<int:pk>/notes/add/', views.note_add, name='note_add'),
     path('notes/<int:pk>/delete/', views.note_delete, name='note_delete'),

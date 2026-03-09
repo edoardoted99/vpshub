@@ -72,33 +72,43 @@
 </div>
 
 <!-- SSH Terminal -->
-{% if server.ssh_user and server.ip_address %}
-<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="font-semibold text-gray-300">SSH Terminal</h2>
-            <p class="text-xs text-gray-500 mt-1">{{ server.ssh_user }}@{{ server.ip_address }}:{{ server.ssh_port }}</p>
-        </div>
+<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6" id="ssh-section">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-gray-300">SSH Terminal</h2>
+        {% if server.ssh_user and server.ip_address %}
         <a href="{% url 'ssh_terminal' server.pk %}" target="_blank"
            class="bg-gray-800 hover:bg-gray-700 text-crown-400 hover:text-crown-300 border border-gray-700 hover:border-crown-500 font-medium px-4 py-2 rounded-lg text-sm transition">
             Open Terminal
         </a>
+        {% endif %}
     </div>
-</div>
-{% elif not server.ssh_user %}
-<div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="font-semibold text-gray-300">SSH Terminal</h2>
-            <p class="text-xs text-gray-500 mt-1">Configure SSH credentials to enable terminal access</p>
+    <form hx-post="{% url 'server_ssh_update' server.pk %}" hx-target="#ssh-section" hx-swap="outerHTML">
+        {% csrf_token %}
+        <div class="grid grid-cols-3 gap-3">
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">User</label>
+                <input type="text" name="ssh_user" value="{{ server.ssh_user }}" placeholder="root"
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:border-crown-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Password</label>
+                <input type="password" name="ssh_password" value="{{ server.ssh_password }}" placeholder="password"
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:border-crown-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Port</label>
+                <div class="flex gap-2">
+                    <input type="number" name="ssh_port" value="{{ server.ssh_port }}" placeholder="22"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:border-crown-500 focus:outline-none">
+                    <button type="submit"
+                            class="bg-crown-500 hover:bg-crown-600 text-gray-900 font-medium px-4 py-2 rounded-lg text-sm transition shrink-0">
+                        Save
+                    </button>
+                </div>
+            </div>
         </div>
-        <a href="{% url 'server_edit' server.pk %}"
-           class="text-sm text-gray-400 hover:text-crown-400 border border-gray-700 hover:border-crown-500 px-3 py-1 rounded-lg transition">
-            Configure SSH
-        </a>
-    </div>
+    </form>
 </div>
-{% endif %}
 
 <!-- Notes -->
 <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
