@@ -79,7 +79,7 @@
             <h2 class="font-semibold text-gray-300">SSH Terminal</h2>
             <p class="text-xs text-gray-500 mt-1">{{ server.ssh_user }}@{{ server.ip_address }}:{{ server.ssh_port }}</p>
         </div>
-        <a href="{% url 'ssh_terminal' server.pk %}"
+        <a href="{% url 'ssh_terminal' server.pk %}" target="_blank"
            class="bg-gray-800 hover:bg-gray-700 text-crown-400 hover:text-crown-300 border border-gray-700 hover:border-crown-500 font-medium px-4 py-2 rounded-lg text-sm transition">
             Open Terminal
         </a>

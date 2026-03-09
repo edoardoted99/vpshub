@@ -1,84 +1,111 @@
-{% extends 'base.html' %}
-
-{% block title %}Terminal - {{ server.name }} - ServerCrown{% endblock %}
-
-{% block content %}
-<div class="mb-4 flex items-center justify-between">
-    <a href="{% url 'server_detail' server.pk %}" class="text-sm text-gray-400 hover:text-crown-400">&larr; Back to {{ server.name }}</a>
-    <span class="text-xs text-gray-500">{{ server.ssh_user }}@{{ server.ip_address }}:{{ server.ssh_port }}</span>
-</div>
-
-<div id="terminal-container" class="bg-black rounded-xl border border-gray-800 overflow-hidden" style="height: calc(100vh - 180px);"></div>
-
-<div id="terminal-status" class="text-xs text-gray-500 mt-2">Connecting...</div>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
-<script>
-(function() {
-    const term = new Terminal({
-        cursorBlink: true,
-        fontSize: 14,
-        fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", monospace',
-        theme: {
-            background: '#000000',
-            foreground: '#e5e7eb',
-            cursor: '#d4a017',
-            selectionBackground: '#d4a01740',
-        },
-    });
-    const fitAddon = new FitAddon.FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(document.getElementById('terminal-container'));
-    fitAddon.fit();
-
-    const statusEl = document.getElementById('terminal-status');
-    const wsScheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(wsScheme + '://' + location.host + '/ws/ssh/{{ server.pk }}/');
-
-    ws.onopen = function() {
-        statusEl.textContent = 'Connected';
-        statusEl.classList.replace('text-gray-500', 'text-green-500');
-        // Send initial terminal size
-        ws.send(JSON.stringify({type: 'resize', cols: term.cols, rows: term.rows}));
-    };
-
-    ws.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        if (data.type === 'output') {
-            term.write(data.data);
-        } else if (data.type === 'error') {
-            term.write('\r\n\x1b[31m' + data.message + '\x1b[0m\r\n');
-            statusEl.textContent = 'Error: ' + data.message;
-            statusEl.classList.replace('text-green-500', 'text-red-400');
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ server.name }} - Terminal</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        crown: {
+                            400: '#e4b520',
+                            500: '#d4a017',
+                        }
+                    }
+                }
+            }
         }
-    };
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+    <style>
+        body { margin: 0; overflow: hidden; }
+    </style>
+</head>
+<body class="bg-black text-gray-100 h-screen flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800 shrink-0">
+        <div class="flex items-center gap-3">
+            <span class="text-crown-400 font-bold text-sm">{{ server.name }}</span>
+            <span id="terminal-status" class="text-xs text-gray-500">Connecting...</span>
+        </div>
+        <span class="text-xs text-gray-600">{{ server.ssh_user }}@{{ server.ip_address }}:{{ server.ssh_port }}</span>
+    </div>
 
-    ws.onclose = function() {
-        term.write('\r\n\x1b[33mConnection closed.\x1b[0m\r\n');
-        statusEl.textContent = 'Disconnected';
-        statusEl.className = 'text-xs text-red-400 mt-2';
-    };
+    <!-- Terminal -->
+    <div id="terminal-container" class="flex-1 min-h-0"></div>
 
-    ws.onerror = function() {
-        statusEl.textContent = 'Connection error';
-        statusEl.className = 'text-xs text-red-400 mt-2';
-    };
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+    <script>
+    (function() {
+        const term = new Terminal({
+            cursorBlink: true,
+            fontSize: 14,
+            fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", monospace',
+            theme: {
+                background: '#000000',
+                foreground: '#e5e7eb',
+                cursor: '#d4a017',
+                selectionBackground: '#d4a01740',
+            },
+        });
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(document.getElementById('terminal-container'));
+        fitAddon.fit();
 
-    term.onData(function(data) {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({type: 'input', data: data}));
-        }
-    });
+        const statusEl = document.getElementById('terminal-status');
+        const wsScheme = location.protocol === 'https:' ? 'wss' : 'ws';
+        const ws = new WebSocket(wsScheme + '://' + location.host + '/ws/ssh/{{ server.pk }}/');
 
-    term.onResize(function(size) {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({type: 'resize', cols: size.cols, rows: size.rows}));
-        }
-    });
+        ws.onopen = function() {
+            statusEl.textContent = 'Connected';
+            statusEl.className = 'text-xs text-green-500';
+            ws.send(JSON.stringify({type: 'resize', cols: term.cols, rows: term.rows}));
+        };
 
-    window.addEventListener('resize', function() { fitAddon.fit(); });
-})();
-</script>
-{% endblock %}
+        ws.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === 'output') {
+                term.write(data.data);
+            } else if (data.type === 'error') {
+                term.write('\r\n\x1b[31m' + data.message + '\x1b[0m\r\n');
+                statusEl.textContent = 'Error: ' + data.message;
+                statusEl.className = 'text-xs text-red-400';
+            }
+        };
+
+        ws.onclose = function() {
+            term.write('\r\n\x1b[33mConnection closed.\x1b[0m\r\n');
+            statusEl.textContent = 'Disconnected';
+            statusEl.className = 'text-xs text-red-400';
+        };
+
+        ws.onerror = function() {
+            statusEl.textContent = 'Connection error';
+            statusEl.className = 'text-xs text-red-400';
+        };
+
+        term.onData(function(data) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({type: 'input', data: data}));
+            }
+        });
+
+        term.onResize(function(size) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({type: 'resize', cols: size.cols, rows: size.rows}));
+            }
+        });
+
+        window.addEventListener('resize', function() { fitAddon.fit(); });
+        term.focus();
+    })();
+    </script>
+</body>
+</html>
